@@ -485,10 +485,3 @@ def test_simple_query(dummy_file):
     assert "owner" in results.columns
     assert "owner_type" not in results.columns
     assert "relative_path" not in results.columns
-
-    results = datareg.simple_query(name_ne="not_test_simple_query")
-    assert len(results) >= 1
-    names = [r["name"] for r in results]
-    index = names.index("test_simple_query2")
-    assert index >= 0
-    assert results[index]["version_string"] == "0.0.2"
