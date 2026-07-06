@@ -436,8 +436,8 @@ def test_query_get_all_tables(dummy_file):
 
     assert len(tables) > 0
 
-def test_easy_query(dummy_file):
-    """Test the `easy_query()` function in `query.py`"""
+def test_simple_query(dummy_file):
+    """Test the `simple_query()` function in `query.py`"""
 
     # Establish connection to database
     _, tmp_root_dir = dummy_file
@@ -446,39 +446,39 @@ def test_easy_query(dummy_file):
     # Insert dataset
     _insert_dataset_entry(
         datareg,
-        "test_easy_query",
+        "test_simple_query",
         "0.0.1",
     )
 
     _insert_dataset_entry(
         datareg,
-        "test_easy_query2",
+        "test_simple_query2",
         "0.0.2",
     )
 
     # default format, list of dicts
-    results = datareg.easy_query(name="test_easy_query")
+    results = datareg.simple_query(name="test_simple_query")
 
     assert isinstance(results, list)
     assert len(results) == 1
-    assert results[0]["name"] == "test_easy_query"
+    assert results[0]["name"] == "test_simple_query"
     assert results[0]["version_string"] == "0.0.1"
 
-    results = datareg.easy_query(name="test_easy_query", return_format="dict_of_lists")
+    results = datareg.simple_query(name="test_simple_query", return_format="dict_of_lists")
     assert isinstance(results, dict)
     assert "name" in results
     assert len(results["name"]) == 1
-    assert results["name"][0] == "test_easy_query"
+    assert results["name"][0] == "test_simple_query"
     assert results["version_string"][0] == "0.0.1"
 
-    results = datareg.easy_query(name="test_easy_query",return_format="dataframe")
+    results = datareg.simple_query(name="test_simple_query",return_format="dataframe")
     assert isinstance(results, pd.DataFrame)
     assert "name" in results.columns
     assert len(results) == 1
-    assert results.loc[0, "name"] == "test_easy_query"
+    assert results.loc[0, "name"] == "test_simple_query"
     assert results.loc[0, "version_string"] == "0.0.1"
 
-    results = datareg.easy_query(name="test_easy_query", return_format="dataframe", columns=["name", "version_string", "owner"])
+    results = datareg.simple_query(name="test_simple_query", return_format="dataframe", columns=["name", "version_string", "owner"])
     assert isinstance(results, pd.DataFrame)
     assert "name" in results.columns
     assert "version_string" in results.columns
@@ -486,12 +486,9 @@ def test_easy_query(dummy_file):
     assert "owner_type" not in results.columns
     assert "relative_path" not in results.columns
 
-    results = datareg.easy_query(name_ne="not_test_easy_query")
+    results = datareg.simple_query(name_ne="not_test_simple_query")
     assert len(results) >= 1
     names = [r["name"] for r in results]
-    index = names.index("test_easy_query2")
+    index = names.index("test_simple_query2")
     assert index >= 0
     assert results[index]["version_string"] == "0.0.2"
-
-    with pytest.raises(ValueError, match="Querying with _gt, _ge, _lt, or _le is not currently supported."):
-        datareg.easy_query(name_gt="test_easy_query")

@@ -152,23 +152,18 @@ class DataRegistry:
 
             return root_dir
 
-    def easy_query(self, return_format="list_of_dicts", columns=None, **query):
+    def simple_query(self, return_format="list_of_dicts", columns=None, **conditions):
         """
         Run a query on the registry with a simple syntax. For example, you can do:
 
         # everything belonging to a specific owner
-        results = registry.easy_query(owner="jbogart")
+        results = registry.simple_query(owner="jbogart")
 
         # a specific dataset
-        results = registry.easy_query(dataset_id=30)
+        results = registry.simple_query(dataset_id=30)
 
         # you can combine search terms, which are ANDed together:
-        results = registry.easy_query(owner="jbogart", version_major=2)
-
-        Once issue 220 in the data registry is resolved then you will also
-        be able to do searches with operators:
-
-        results = registry.easy_query(total_disk_size_gt=100)
+        results = registry.simple_query(owner="jbogart", version_major=2)
 
         Current supported search terms are:
             access_api
@@ -217,10 +212,9 @@ class DataRegistry:
             If not None, only return these columns in the results. The column
             names should be from the list of search terms above, without the "dataset."
 
-        **query : dict
-            The query parameters. Currently these should always be
-            of the form field=value, where field is one of the search
-            terms listed above.
+        **conditions : dict
+            The query parameters. These should be of the form field=value,
+            where field is one of the search terms listed above.
 
         Returns
         -------
@@ -232,34 +226,7 @@ class DataRegistry:
 
 
         """
-        filters = []
-        ops = {
-            "_lt": "<",
-            "_le": "<=",
-            "_gt": ">",
-            "_ge": ">=",
-            "_ne": "!="
-        }
-        # parse the query keywords and turn them all into filters.
-        for k, v in query.items():
-            # check for queries that end with a search operator, e.g. total_disk_size_gt=100.
-            # This approach is taken from sqlalchemy.
-            for suffix, op in ops.items():
-                # Check if the search term is a search operator
-                if k.endswith(suffix):
-                    # This is currently broken so only support _ne,
-                    # but remove this when issue 220 in the data registry is resolved.
-                    if suffix != "_ne":
-                        raise ValueError("Querying with _gt, _ge, _lt, or _le is not currently supported due to a dataregistry issue 220.")
-                    base_key = k[:-len(suffix)]
-                    # Generate that actual query object
-                    f = self.query.gen_filter("dataset." + base_key, op, v)
-                    filters.append(f)
-                    break
-            # If none of the suffixes matched, then this is a normal query of the form field=value.
-            else:
-                f = self.query.gen_filter("dataset." + k, "==", v)
-                filters.append(f)
+        filters = [self.query.gen_filter("dataset." + k, "==", v) for (k, v) in conditions.items()]
 
         # run the actual query and ask for a dataframe back for convenience.
         property_names = None
