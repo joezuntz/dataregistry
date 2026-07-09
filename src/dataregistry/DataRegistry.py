@@ -1,6 +1,7 @@
 from dataregistry.db_basic import DbConnection
 from dataregistry.query import Query
 from dataregistry.registrar import Registrar
+from dataregistry.registrar.registrar_util import _form_dataset_path
 import yaml
 import os
 import logging
@@ -150,6 +151,146 @@ class DataRegistry:
                     root_dir = data["nersc"]
 
             return root_dir
+
+    def simple_query(self, return_format="list_of_dicts", columns=None, **conditions):
+        """
+        Run a query on the registry with a simple syntax. For example, you can do:
+
+        # everything belonging to a specific owner
+        results = registry.simple_query(owner="jbogart")
+
+        # a specific dataset
+        results = registry.simple_query(dataset_id=30)
+
+        # you can combine search terms, which are ANDed together:
+        results = registry.simple_query(owner="jbogart", version_major=2)
+
+        Current supported search terms are:
+            access_api
+            access_api_configuration
+            archive_date
+            archive_path
+            contact_email
+            creation_date
+            creator_uid
+            data_org
+            dataset_id
+            delete_date
+            delete_uid
+            description
+            execution_id
+            is_overwritable
+            location_type
+            move_date
+            name
+            nfiles
+            owner
+            owner_type
+            register_date
+            register_root_dir
+            relative_path
+            replace_id
+            replace_iteration
+            status
+            total_disk_space
+            url
+            version_major
+            version_minor
+            version_patch
+            version_string
+            path
+
+        Parameters
+        ----------
+
+        return_format : str
+            The format to return the results in. Options are "list_of_dicts",
+            "dataframe", "dict_of_lists". The default is "list_of_dicts".
+            "dict_of_lists" matches the format return by find_datasets.
+
+        columns : list of str, optional
+            If not None, only return these columns in the results. The column
+            names should be from the list of search terms above, without the "dataset."
+
+        **conditions : dict
+            The query parameters. These should be of the form field=value,
+            where field is one of the search terms listed above.
+
+        Returns
+        -------
+        list of dict
+            A list of datasets matching the query, where each dataset is represented as a dict of its
+            metadata fields. The keys of the dicts will be the same as the search terms listed above.
+            Note that internally the keys are prefixed with "dataset.", but this function will remove
+            that prefix for convenience.
+
+
+        """
+        filters = [self.query.gen_filter("dataset." + k, "==", v) for (k, v) in conditions.items()]
+
+        # run the actual query and ask for a dataframe back for convenience.
+        property_names = None
+        if columns is not None:
+            property_names = ["dataset." + c for c in columns]
+            for req_col in ["owner_type", "owner", "relative_path"]:
+                if req_col not in columns:
+                    property_names.append("dataset." + req_col)
+        results = self.query.find_datasets(filters=filters, property_names=property_names, return_format='dataframe')
+
+
+        # We will need this schema information to
+        # generate the absolute path for each dataset.
+        if self.db_connection._query_mode == "both":
+            schema = "working"
+        else:
+            schema = self.db_connection._query_mode
+        if not self.db_connection._namespace:
+            schema_name = None
+        else:
+            schema_name = self.db_connection._namespace + '_' + schema
+
+        # Get the absolute path for each dataset.
+        # We avoid using the query.get_dataset_absolute_path function here
+        # because we have already queried all the info we need to
+        # generate the path and that would require another DB
+        # query per result.
+        def _path_from_row(row):
+            owner_type = row["dataset.owner_type"]
+            if owner_type is None or owner_type != owner_type:
+                return None
+            return _form_dataset_path(
+                owner_type,
+                row["dataset.owner"],
+                row["dataset.relative_path"],
+                schema=schema_name,
+                root_dir=self.root_dir,
+            )
+
+        results["dataset.path"] = results.apply(_path_from_row, axis=1)
+
+        # remove the "dataset." prefix from the keys
+        results = results.rename(
+            columns=lambda key: key[len("dataset."):] if key.startswith("dataset.") else key
+        )
+
+        # remove any columns that the user did not actually want
+        # but we had to add to generate the path
+        if columns is not None:
+            for req_col in ["owner_type", "owner", "relative_path"]:
+                if req_col not in columns:
+                    results = results.drop(columns=req_col)
+
+
+        # convert into the user's requested return format,
+        # if needed
+        if return_format == "dataframe":
+            return results
+        elif return_format == "dict_of_lists":
+            return results.to_dict(orient='list')
+        elif return_format == "list_of_dicts":
+            return results.to_dict(orient='records')
+
+        raise ValueError(f"Invalid return_format {return_format}")
 
     # Simplify calls to functions in Registrar object
     def fetch(self, dataset_id, schema_type="working",
