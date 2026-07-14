@@ -2,7 +2,6 @@
 
 <img src="docs/source/_static/DREGS_logo_v2.png" width="300"/>
 
-**The ``dataregistry`` is currently undergoing beta testing, if you would like to participate please get in touch!**
 
 ### What is the data registry?
 
@@ -19,4 +18,3 @@ The full documentation for the data registry can be found [here](http://lsstdesc
 For any further information, please get in touch!
 
 - Admin: Joanne Bogart ([@JoanneBogart](https://www.github.com/JoanneBogart))
-- Admin: Stuart McAlpine ([@stuartmcalpine](https://www.github.com/stuartmcalpine))

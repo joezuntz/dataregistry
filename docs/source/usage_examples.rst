@@ -55,8 +55,8 @@ by means of the optional keyword argument `relative_path`:
    import os
    from dataregistry import DataRegistry
 
-   # create new data registry object; reference its registrar member
-   my_reg = DataRegistry().registrar
+   # create new data registry object
+   my_reg = DataRegistry()
 
    # establish values to be passed to the register routine
    name = "my_dataset"
@@ -68,7 +68,7 @@ by means of the optional keyword argument `relative_path`:
 
    rel_path = "my_dataset.parquet"
 
-   id_1, exec_1 = my_reg.dataset.register(
+   id_1, exec_1 = my_reg.register_dataset(
        name,
        version,
        description="A dataset registered with specific relative path",
@@ -97,7 +97,7 @@ The code for this would look just like the previous example except that
 the `relative_path` argument would be omitted.  The resulting dataset
 would have parent directory
 
-**entry_base_path**/`name`_`version`/.gen_paths/`name`_`version`/my_dataset.parquet
+**entry_base_path**/.gen_paths/`name`_`version`/my_dataset.parquet
 
 The `.gen_paths` component guarantees that the generated paths will not
 collide with user-supplied relative paths (which may not start with
@@ -141,7 +141,7 @@ informative for the `description` argument.
    from dataregistry import DataRegistry
 
    # create new data registry object; reference its registrar member
-   my_reg = DataRegistry().registrar
+   my_reg = DataRegistry()
 
    # establish values to be passed to the register routine
    name = "external_dataset"
@@ -149,10 +149,10 @@ informative for the `description` argument.
    email = "JaneDoe@slac.stanford.edu"
    url = "file:///global/cfs/cdirs/lsst/groups/some_group/large_dataset"
 
-   id_2, exec_2 = my_reg.dataset.register(
+   id_2, exec_2 = my_reg.register_dataset(
        name,
        version,
-       description="Registered
+       description="Registered external",
        owner_type="user",  # this is the default
        location_type="external",
        contact_email=email,
@@ -218,17 +218,18 @@ Simple query
    import os
    from dataregistry import DataRegistry
 
-   # create new data registry object; reference its query member
-   my_q = DataRegistry().query
+   # create new data registry object
+   my_reg = DataRegistry()
 
    # When specifying columns, qualify with table name
    columns = ["dataset.dataset_id", "dataset.name", "dataset.relative_path",
               "dataset.access_api", "dataset.access_api_configuration"]
 
+   # Use the utility gen_filter to create a filter object
    # dataset.name must contain "dc2" (case insensitive)
-   filters = [my_q.gen_filter("dataset.name", "~=", "*dc2*")]
+   filters = [my_reg.query.gen_filter("dataset.name", "~=", "*dc2*")]
 
-   results = my_q.find_datasets(
+   results = my_reg.find_datasets(
                  property_names=columns,
                  filters=filters,
                  schema_mode="production",  # search only production
@@ -250,16 +251,16 @@ Query using keywords
    from dataregistry import DataRegistry
 
    # create new data registry object; reference its query member
-   my_q = DataRegistry().query
+   my_reg = DataRegistry()
 
    # When specifying columns, qualify with table name
    columns = ["dataset.dataset_id", "dataset.name", "dataset.relative_path",
               "version_string"]
 
    # dataset_id must be > 10; name must contain "dc2" (case insensitive)
-   filters = [my_q.gen_filter("keyword.keyword", "==", "pz_model")]
+   filters = [my_reg.query.gen_filter("keyword.keyword", "==", "pz_model")]
 
-   results = my_q.find_datasets(
+   results = my_reg.find_datasets(
                  property_names=columns,
                  filters=filters,
                  schema_mode="working",  # search only non-production

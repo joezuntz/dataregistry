@@ -37,9 +37,11 @@ class ExecutionTable(BaseTable):
         description** : str, optional
         execution_start** : datetime, optional
         site** : str, optional
-        configuration** : str, optional
-        input_datasets** : list, optional
-        input_production_datasets** : list, optional
+        configuration** : str which is path to coonfiguration file for
+                          the code executed, optional
+        input_datasets** : list of ids (int) of registered datasets, optional
+        input_production_datasets** : list of ids (int) of registered
+                                      production datasets, optional
         max_config_length : int, optional
             Maxiumum number of lines to read from a configuration file
 
