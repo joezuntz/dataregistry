@@ -55,7 +55,7 @@ by means of the optional keyword argument `relative_path`:
    import os
    from dataregistry import DataRegistry
 
-   # create new data registry object; reference its registrar member
+   # create new data registry object
    my_reg = DataRegistry()
 
    # establish values to be passed to the register routine
@@ -218,13 +218,14 @@ Simple query
    import os
    from dataregistry import DataRegistry
 
-   # create new data registry object; reference its query member
+   # create new data registry object
    my_reg = DataRegistry()
 
    # When specifying columns, qualify with table name
    columns = ["dataset.dataset_id", "dataset.name", "dataset.relative_path",
               "dataset.access_api", "dataset.access_api_configuration"]
 
+   # Use the utility gen_filter to create a filter object
    # dataset.name must contain "dc2" (case insensitive)
    filters = [my_reg.query.gen_filter("dataset.name", "~=", "*dc2*")]
 
