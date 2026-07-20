@@ -44,3 +44,6 @@ def dregs_show(show_what, args):
 
         print(f"Avaliable keywords:")
         print(datareg.Query.get_keyword_list())
+    elif show_what == "projects":
+        print(f"Available projects:")
+        print(datareg.Query.get_project_list())
