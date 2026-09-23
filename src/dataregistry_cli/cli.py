@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+from dataregistry._version import __version__
 from dataregistry.schema import DEFAULT_NAMESPACE
 from .register import register_dataset
 from .delete import delete_dataset
@@ -77,6 +78,12 @@ def get_parser():
     parser = argparse.ArgumentParser(
         description="The data registry CLI interface",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=__version__,
+        help="Print the package version and exit.",
     )
     subparsers = parser.add_subparsers(title="subcommand", dest="subcommand")
 

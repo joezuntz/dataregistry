@@ -3,10 +3,19 @@ import shlex
 import dataregistry_cli.cli as cli
 import pytest
 from dataregistry import DataRegistry
+from dataregistry._version import __version__
 from dataregistry.schema import DEFAULT_NAMESPACE
 
 from database_test_utils import dummy_file
 from dataregistry.registrar.dataset_util import get_dataset_status, set_dataset_status
+
+
+def test_cli_version(capsys):
+    """Print the package version when requested."""
+    with pytest.raises(SystemExit) as exc:
+        cli.get_parser().parse_args(["--version"])
+    assert exc.value.code == 0
+    assert capsys.readouterr().out.strip() == __version__
 
 
 def test_simple_query(dummy_file):
